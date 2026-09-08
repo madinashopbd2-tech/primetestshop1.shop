@@ -13,14 +13,14 @@ import {
 } from './src/data/initial-store-data';
 import { createOrderAction } from './src/app/actions/order-actions';
 import { dispatchAllServerMarketingEvents, marketingLogsMemory } from './src/lib/marketing/server-capi';
-import { sendMetaCapiEvent as sendMetaCapiDirect } from './src/lib/meta';
 import { ProductData, StoreSettings, OrderData, ReviewData, FaqData, CouponData, BlacklistEntry, IncompleteOrderData } from './src/types';
 
 // Derive __dirname safely for CJS/ESM compatibility
 const safeDirname = typeof __dirname !== 'undefined' ? __dirname : process.cwd();
 const DATA_FILE = path.join(safeDirname, 'data_store.json');
 
-const PORT = 3000;
+// Safe port selection: uses CloudPanel / hosting PORT environment variable if provided, defaults to 3000
+const PORT = Number(process.env.PORT) || 3000;
 
 // In-Memory Database Engine
 let currentProduct: ProductData = { ...INITIAL_PRODUCT };
@@ -299,97 +299,6 @@ async function startServer() {
       res.json({ success: true, result });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err?.message || 'Error dispatching marketing event' });
-    }
-  });
-
-  // Dedicated Meta Conversions API (CAPI) Endpoint
-  app.post('/api/meta/events', async (req, res) => {
-    try {
-      const eventName = req.body.event_name || req.body.eventName;
-      const eventId = req.body.event_id || req.body.eventId;
-      const eventTime = req.body.event_time || req.body.eventTime || Math.floor(Date.now() / 1000);
-      const actionSource = req.body.action_source || req.body.actionSource || 'website';
-      const eventSourceUrl = req.body.event_source_url || req.body.eventSourceUrl || req.headers.referer || (req.headers.host ? `https://${req.headers.host}` : 'https://medimartbd.shop');
-      const userData = req.body.user_data || req.body.userData || {};
-      const customData = req.body.custom_data || req.body.customData || {};
-      const testEventCode = req.body.test_event_code || req.body.testEventCode || process.env.META_TEST_EVENT_CODE || currentSettings.metaTestEventCode;
-
-      if (!eventName) {
-        return res.status(400).json({ success: false, error: 'event_name is required' });
-      }
-
-      // Resolve real client IP across Cloudflare, Nginx, and proxies
-      const rawIp =
-        (req.headers['cf-connecting-ip'] as string) ||
-        (req.headers['x-real-ip'] as string) ||
-        (req.headers['x-forwarded-for'] as string) ||
-        req.socket.remoteAddress ||
-        '';
-      const clientIp = rawIp.split(',')[0].trim();
-      const userAgent = (req.headers['user-agent'] as string) || 'Mozilla/5.0';
-
-      // Parse cookies for backup _fbp and _fbc
-      const cookieHeader = req.headers.cookie || '';
-      const requestCookies: Record<string, string> = {};
-      if (cookieHeader) {
-        cookieHeader.split(';').forEach((cookie) => {
-          const parts = cookie.split('=');
-          const name = parts.shift()?.trim();
-          if (name) {
-            requestCookies[name] = decodeURIComponent(parts.join('=').trim().replace(/^"|"$/g, ''));
-          }
-        });
-      }
-
-      const mergedUserData = {
-        ipAddress: clientIp || undefined,
-        userAgent,
-        fbp: userData.fbp || requestCookies['_fbp'] || undefined,
-        fbc: userData.fbc || requestCookies['_fbc'] || undefined,
-        ...userData,
-      };
-
-      const result = await sendMetaCapiDirect(
-        {
-          eventName,
-          eventId: eventId || `evt_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
-          eventTime,
-          eventSourceUrl,
-          actionSource,
-          userData: mergedUserData,
-          customData,
-          testEventCode,
-        },
-        {
-          pixelId: process.env.META_PIXEL_ID || currentSettings.metaPixelId,
-          accessToken: process.env.META_ACCESS_TOKEN || currentSettings.metaCapiToken,
-          testEventCode,
-        }
-      );
-
-      // Record to admin marketing logs
-      marketingLogsMemory.unshift({
-        id: `capi_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-        eventId: result.eventId,
-        eventName: result.eventName,
-        status: result.status,
-        statusCode: result.statusCode,
-        responseMessage: result.message,
-        timestamp: new Date().toLocaleTimeString(),
-        payloadSummary: `${eventName} (Val: BDT ${customData.value || 0}, EventID: ${result.eventId})`,
-      });
-      if (marketingLogsMemory.length > 100) marketingLogsMemory.pop();
-
-      res.json({
-        success: result.success,
-        status: result.status,
-        event_id: result.eventId,
-        event_name: result.eventName,
-        events_received: result.eventsReceived || 1,
-        message: result.message,
-      });
-    } catch (err: any) {
-      res.status(500).json({ success: false, error: 'Failed to process Meta CAPI event' });
     }
   });
 
