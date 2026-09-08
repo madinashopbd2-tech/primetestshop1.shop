@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, CheckCircle, ThumbsUp, MessageSquarePlus } from 'lucide-react';
+import { Star, MessageSquarePlus, MapPin, Quote, CheckCircle2 } from 'lucide-react';
 import { ReviewData } from '../../types';
 import { trackClientInternalClick } from '../../lib/marketing/tracking-client';
 
@@ -18,7 +18,7 @@ export const CustomerReviews: React.FC<CustomerReviewsProps> = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [authorName, setAuthorName] = useState('');
-  const [location, setLocation] = useState('Dhaka');
+  const [location, setLocation] = useState('ঢাকা');
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
 
@@ -31,7 +31,7 @@ export const CustomerReviews: React.FC<CustomerReviewsProps> = ({
       authorName: authorName.trim(),
       rating,
       comment: comment.trim(),
-      location: location.trim() || 'Dhaka',
+      location: location.trim() || 'ঢাকা',
       isVerified: true,
       createdAt: 'এখনই',
     };
@@ -43,153 +43,164 @@ export const CustomerReviews: React.FC<CustomerReviewsProps> = ({
   };
 
   return (
-    <section className="py-12 bg-slate-50 border-t border-slate-200">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
-          <div>
-            <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest bg-emerald-100 px-3 py-1 rounded-full">
-              {sectionBadge || 'কাস্টমার রিভিউ'}
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2">
-              {sectionTitle || 'আমাদের সম্মানিত গ্রাহকদের মতামত'}
-            </h2>
-          </div>
+    <section id="ll-review-section" className="relative py-16 sm:py-24 bg-[#064e3b] text-white font-sans overflow-hidden">
+      {/* Background Glows */}
+      <div className="absolute top-0 right-0 w-80 sm:w-96 h-80 sm:h-96 bg-amber-400/15 rounded-full blur-[90px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-80 sm:w-96 h-80 sm:h-96 bg-emerald-400/15 rounded-full blur-[90px] pointer-events-none" />
 
-          <button
-            onClick={() => {
-              setShowModal(true);
-              trackClientInternalClick('Write_Review_Button', 'OpenModal');
-            }}
-            className="px-5 py-2.5 bg-slate-900 text-white font-bold text-xs rounded-xl hover:bg-emerald-600 transition-all flex items-center gap-2 cursor-pointer shadow-sm"
-          >
-            <MessageSquarePlus className="w-4 h-4 text-amber-400" />
-            <span>রিভিউ লিখুন</span>
-          </button>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
+        
+        {/* Header */}
+        <div className="text-center space-y-3 mb-12 sm:mb-16">
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-white flex items-center justify-center gap-2">
+            <span>💬</span>
+            <span>{sectionTitle || 'গ্রাহকদের মতামত'}</span>
+          </h2>
+          <p className="text-sm sm:text-base text-emerald-200 max-w-xl mx-auto font-medium">
+            সারাদেশ থেকে হাজারো সন্তুষ্ট গ্রাহক আমাদের প্রোডাক্ট ব্যবহার করে উপকৃত হয়েছেন
+          </p>
+
+          <div className="pt-2">
+            <button
+              onClick={() => {
+                setShowModal(true);
+                trackClientInternalClick('Write_Review_Button', 'OpenModal');
+              }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer shadow-lg shadow-amber-500/20"
+            >
+              <MessageSquarePlus className="w-4 h-4" />
+              <span>আপনার অভিজ্ঞতা শেয়ার করুন</span>
+            </button>
+          </div>
         </div>
 
         {/* Reviews Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {reviews.map((rev) => (
-            <div
-              key={rev.id}
-              className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3 flex flex-col justify-between"
-            >
-              <div className="space-y-2">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-sm">{rev.authorName}</h4>
-                    <span className="text-[11px] text-slate-500">{rev.location} • {rev.createdAt}</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {reviews.map((rev) => {
+            const initial = rev.authorName ? rev.authorName.charAt(0) : 'ক';
+            return (
+              <div
+                key={rev.id}
+                className="bg-white/10 backdrop-blur-md border border-white/15 hover:border-amber-400/50 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 shadow-lg shadow-emerald-950/20 flex flex-col justify-between space-y-4"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold text-lg shadow-md shrink-0">
+                        {initial}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-white text-base">
+                          {rev.authorName}
+                        </h4>
+                        <div className="flex items-center gap-1 text-xs text-emerald-200">
+                          <MapPin className="w-3 h-3 text-emerald-400" />
+                          <span>{rev.location || 'বাংলাদেশ'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex text-amber-400">
+                      {[...Array(rev.rating || 5)].map((_, i) => (
+                        <Star key={i} className="w-3.5 h-3.5 fill-current" />
+                      ))}
+                    </div>
                   </div>
-                  {rev.isVerified && (
-                    <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-200">
-                      <CheckCircle className="w-3 h-3 text-emerald-600" />
-                      ভেরিফাইড বায়্যার
-                    </span>
-                  )}
+
+                  <Quote className="w-6 h-6 text-emerald-400/40 mb-2" />
+                  <p className="text-sm text-slate-100 italic leading-relaxed">
+                    "{rev.comment}"
+                  </p>
                 </div>
 
-                <div className="flex text-amber-400">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-3.5 h-3.5 ${
-                        i < rev.rating ? 'fill-current' : 'text-slate-200'
-                      }`}
-                    />
-                  ))}
+                <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[11px] text-emerald-300">
+                  <span className="flex items-center gap-1 text-emerald-300 font-semibold">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> ভেরিফাইড ক্রেতা
+                  </span>
+                  <span className="text-emerald-300/80">{rev.createdAt}</span>
                 </div>
-
-                <p className="text-xs text-slate-700 leading-relaxed italic">
-                  "{rev.comment}"
-                </p>
               </div>
-
-              {rev.photoUrl && (
-                <div className="mt-2 rounded-xl overflow-hidden border border-slate-200 h-28">
-                  <img
-                    src={rev.photoUrl}
-                    alt="Review Photo"
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
+
       </div>
 
-      {/* Review Submission Modal */}
+      {/* Review Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">আপনার মূল্যবান রিভিউ প্রদান করুন</h3>
-
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white text-slate-900 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative animate-in zoom-in duration-200 space-y-4">
+            <h3 className="text-xl font-bold text-slate-900">
+              আপনার মতামত লিখুন
+            </h3>
             <form onSubmit={handleSubmitReview} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">আপনার নাম *</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">আপনার নাম</label>
                 <input
                   type="text"
                   required
                   value={authorName}
                   onChange={(e) => setAuthorName(e.target.value)}
-                  placeholder="যেমন: মোঃ তামিম ইকবাল"
-                  className="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-xs outline-none focus:border-emerald-500"
+                  placeholder="যেমন: মোঃ রাশেদ"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">অবস্থান / এলাকা</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">আপনার জেলা / এলাকা</label>
                 <input
                   type="text"
+                  required
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="যেমন: সাভার, ঢাকা"
-                  className="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-xs outline-none focus:border-emerald-500"
+                  placeholder="যেমন: ঢাকা, মিরপুর"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">রেটিং নির্বাচন করুন</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">রেটিং</label>
                 <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
+                  {[1, 2, 3, 4, 5].map((s) => (
                     <button
-                      key={star}
+                      key={s}
                       type="button"
-                      onClick={() => setRating(star)}
-                      className="p-1 text-amber-400 hover:scale-110 transition-transform cursor-pointer"
+                      onClick={() => setRating(s)}
+                      className={`p-2 rounded-lg border ${
+                        rating >= s ? 'bg-amber-100 border-amber-400 text-amber-500' : 'bg-slate-50 border-slate-200 text-slate-300'
+                      }`}
                     >
-                      <Star className={`w-6 h-6 ${star <= rating ? 'fill-current' : 'text-slate-300'}`} />
+                      <Star className="w-5 h-5 fill-current" />
                     </button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">আপনার মতামত / অভিজ্ঞতা লিখুন *</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">আপনার রিভিউ</label>
                 <textarea
                   required
                   rows={3}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder="প্রোডাক্টের মান ও ডেলিভারি স্পিড কেমন লেগেছে জানিয়া দিন..."
-                  className="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-xs outline-none focus:border-emerald-500"
+                  placeholder="পণ্যটি ব্যবহার করে কেমন ফলাফল পেলেন?"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
                 />
               </div>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 py-2.5 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-200"
+                  className="flex-1 py-2.5 rounded-xl border border-slate-300 text-sm font-bold text-slate-600 hover:bg-slate-50"
                 >
                   বাতিল
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 bg-emerald-600 text-white font-bold text-xs rounded-xl hover:bg-emerald-700 shadow-sm"
+                  className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-sm font-bold text-white shadow-md shadow-emerald-600/30"
                 >
-                  পাবলিশ করুন
+                  সাবমিট করুন
                 </button>
               </div>
             </form>

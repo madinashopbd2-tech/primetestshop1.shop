@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { BANGLADESH_DISTRICTS } from '../../data/bangladesh-locations';
 import { ProductData, StoreSettings, OrderData } from '../../types';
-import { trackClientInitiateCheckout, trackClientInternalClick, getMarketingClickContext } from '../../lib/marketing/tracking-client';
+import { trackClientInitiateCheckout, trackClientInternalClick, trackClientAddToCart, getMarketingClickContext } from '../../lib/marketing/tracking-client';
 import { getOrCreateDeviceId } from '../../lib/device-fingerprint';
 
 interface OrderFormProps {
@@ -250,6 +250,92 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Package & Quantity Selector with AddToCart Meta Event */}
+          <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <ShoppingBag className="w-3.5 h-3.5 text-emerald-600" />
+                প্যাকেজ নির্বাচন করুন
+              </span>
+              <span className="text-[11px] text-emerald-700 font-normal">
+                ১ টির বেশি অর্ডারে বিশেষ ডিসকাউন্ট
+              </span>
+            </label>
+            <div className="grid grid-cols-3 gap-2.5">
+              {[
+                { qty: 1, label: '১ পিস', tag: 'নরমাল' },
+                { qty: 2, label: '২ পিস', tag: 'জনপ্রিয়' },
+                { qty: 3, label: '৩ পিস', tag: 'বেস্ট ডিল' },
+              ].map((pkg) => {
+                const isSelected = quantity === pkg.qty;
+                return (
+                  <button
+                    key={pkg.qty}
+                    type="button"
+                    onClick={() => {
+                      setQuantity(pkg.qty);
+                      trackClientAddToCart(product, pkg.qty, {
+                        package_label: pkg.label,
+                        trigger: 'PackageSelect',
+                      });
+                      trackClientInternalClick('Package_Select', `${pkg.qty}_pcs`);
+                    }}
+                    className={`relative py-3 px-2 rounded-xl text-center border-2 transition-all cursor-pointer ${
+                      isSelected
+                        ? 'border-emerald-600 bg-white shadow-sm ring-1 ring-emerald-600/20'
+                        : 'border-slate-200 bg-white/70 hover:border-emerald-300'
+                    }`}
+                  >
+                    <span className="block text-sm font-extrabold text-slate-800">
+                      {pkg.label}
+                    </span>
+                    <span className="text-[10px] text-slate-500 block">
+                      ৳{(product.offerPrice || product.regularPrice) * pkg.qty}
+                    </span>
+                    <span
+                      className={`inline-block mt-1 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                        isSelected
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {pkg.tag}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-emerald-100/70 text-xs">
+              <span className="text-slate-600 font-medium">কাস্টম পরিমাণ:</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newQty = Math.max(1, quantity - 1);
+                    setQuantity(newQty);
+                    trackClientAddToCart(product, newQty, { trigger: 'QuantityMinus' });
+                  }}
+                  className="w-7 h-7 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 font-bold flex items-center justify-center text-slate-700"
+                >
+                  -
+                </button>
+                <span className="w-8 text-center font-bold text-slate-900 text-sm">{quantity}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newQty = quantity + 1;
+                    setQuantity(newQty);
+                    trackClientAddToCart(product, newQty, { trigger: 'QuantityPlus' });
+                  }}
+                  className="w-7 h-7 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 font-bold flex items-center justify-center text-slate-700"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* Customer Personal Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>

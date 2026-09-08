@@ -25,6 +25,15 @@ import {
   OrderStatus 
 } from './types';
 import { HeroSection } from './components/landing/HeroSection';
+import { VideoSection } from './components/landing/VideoSection';
+import { PriceSection } from './components/landing/PriceSection';
+import { BenefitsSection } from './components/landing/BenefitsSection';
+import { UsageSection } from './components/landing/UsageSection';
+import { EducationSection } from './components/landing/EducationSection';
+import { WhyUsSection } from './components/landing/WhyUsSection';
+import { CertificateSection } from './components/landing/CertificateSection';
+import { HelplineSection } from './components/landing/HelplineSection';
+import { LiveOrderNotification } from './components/landing/LiveOrderNotification';
 import { MediaGallery } from './components/landing/MediaGallery';
 import { ScarcityEngine } from './components/landing/ScarcityEngine';
 import { FeaturesGrid } from './components/landing/FeaturesGrid';
@@ -491,6 +500,35 @@ export default function App() {
         onScrollToCheckout={scrollToCheckout}
       />
     ),
+    video: (
+      <VideoSection
+        key="video"
+        product={product}
+        onScrollToCheckout={scrollToCheckout}
+      />
+    ),
+    pricing: (
+      <PriceSection
+        key="pricing"
+        product={product}
+        onScrollToCheckout={scrollToCheckout}
+      />
+    ),
+    benefits: (
+      <BenefitsSection
+        key="benefits"
+        onScrollToCheckout={scrollToCheckout}
+      />
+    ),
+    usage: (
+      <UsageSection
+        key="usage"
+        onScrollToCheckout={scrollToCheckout}
+      />
+    ),
+    education: <EducationSection key="education" />,
+    whyus: <WhyUsSection key="whyus" />,
+    certificate: <CertificateSection key="certificate" />,
     media: <MediaGallery key="media" product={product} />,
     scarcity: (
       <ScarcityEngine
@@ -509,9 +547,10 @@ export default function App() {
         onAddReview={handleAddReview}
       />
     ),
+    helpline: <HelplineSection key="helpline" />,
     faqs: <AccordionFAQs key="faqs" faqs={faqs} />,
     checkout: (
-      <section key="checkout" className="py-12 bg-slate-100">
+      <section id="checkout" key="checkout" className="py-14 bg-gradient-to-b from-slate-100 to-emerald-50/50 scroll-mt-6">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <OrderForm
             product={product}
@@ -608,6 +647,7 @@ export default function App() {
       ) : (
         /* Customer Facing Dynamic Landing Page */
         <main className="pb-16 lg:pb-0">
+          <LiveOrderNotification />
           {settings.sectionOrder.map((sectionKey) => {
             if (settings.sectionVisibility[sectionKey] === false) return null;
             return sectionMap[sectionKey] || null;

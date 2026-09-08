@@ -7,6 +7,7 @@
 
 import { StoreSettings, ProductData, OrderData } from '../../types';
 import { getOrCreateDeviceId } from '../device-fingerprint';
+import { generateMetaEventId, isPurchaseFired, markPurchaseFired } from '../meta';
 
 declare global {
   interface Window {
@@ -277,9 +278,10 @@ async function sendServerEvent(eventName: string, eventId: string, customData: a
 
 /**
  * Generate a unique, deterministic Event ID for Pixel + CAPI deduplication
+ * Prefers crypto.randomUUID() via generateMetaEventId
  */
 export function generateEventId(prefix: string): string {
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  return generateMetaEventId(prefix);
 }
 
 /**
@@ -552,6 +554,93 @@ export function trackClientViewContent(product: ProductData) {
     content_type: 'product',
     content_ids: ['COD-PROD-01'],
   });
+}
+
+/**
+ * 2b. Track AddToCart Event (Browser Pixel + Server CAPI with exact same event_id)
+ */
+export function trackClientAddToCart(
+  product: ProductData,
+  quantity = 1,
+  details: Record<string, any> = {},
+  userData?: { phone?: string; name?: string; district?: string; email?: string }
+) {
+  if (typeof window === 'undefined' || !product) return '';
+  const eventId = generateEventId('add_to_cart');
+  const unitPrice = product.offerPrice || product.regularPrice;
+  const totalPrice = unitPrice * quantity;
+
+  // 1. Meta Pixel
+  if (window.fbq) {
+    window.fbq(
+      'track',
+      'AddToCart',
+      {
+        content_name: product.title,
+        content_type: 'product',
+        content_ids: ['COD-PROD-01'],
+        value: totalPrice,
+        currency: 'BDT',
+        num_items: quantity,
+        ...details,
+      },
+      { eventID: eventId }
+    );
+  }
+
+  // 2. TikTok Pixel
+  if (window.ttq) {
+    window.ttq.track(
+      'AddToCart',
+      {
+        content_name: product.title,
+        content_type: 'product',
+        content_id: 'COD-PROD-01',
+        value: totalPrice,
+        currency: 'BDT',
+        quantity,
+      },
+      { event_id: eventId }
+    );
+  }
+
+  // 3. GA4
+  if (window.gtag) {
+    window.gtag('event', 'add_to_cart', {
+      currency: 'BDT',
+      value: totalPrice,
+      items: [{ item_id: 'COD-PROD-01', item_name: product.title, price: unitPrice, quantity }],
+    });
+  }
+
+  // 4. GTM
+  window.dataLayer?.push({
+    event: 'add_to_cart',
+    ecommerce: {
+      currency: 'BDT',
+      value: totalPrice,
+      items: [{ item_id: 'COD-PROD-01', item_name: product.title, price: unitPrice, quantity }],
+    },
+    event_id: eventId,
+  });
+
+  // 5. Server CAPI Backup with exact same eventId
+  sendServerEvent(
+    'AddToCart',
+    eventId,
+    {
+      value: totalPrice,
+      currency: 'BDT',
+      content_name: product.title,
+      content_type: 'product',
+      content_ids: ['COD-PROD-01'],
+      num_items: quantity,
+      ...details,
+    },
+    userData
+  );
+
+  return eventId;
 }
 
 /**
@@ -1020,6 +1109,16 @@ export function trackClientPurchase(
   googleAdsConversionId?: string
 ) {
   if (typeof window === 'undefined') return;
+  if (!order || !order.id) return;
+
+  // Prevent duplicate Purchase firing if user refreshes the success page
+  if (isPurchaseFired(order.id)) {
+    if (typeof console !== 'undefined') {
+      console.log(`[Meta Tracking] Purchase event for order ${order.id} already fired. Duplicate prevented.`);
+    }
+    return;
+  }
+  markPurchaseFired(order.id);
 
   const eventId = order.eventId || `purchase_${order.id}`;
 
@@ -1100,4 +1199,55 @@ export function trackClientPurchase(
       ],
     },
   });
+}
+
+/**
+ * 11. Track Custom Event with Browser + Server Deduplication
+ * (Browser trackCustom + Server CAPI with exact same eventName & eventId)
+ */
+export function trackClientCustomEvent(
+  eventName: string,
+  parameters: Record<string, any> = {},
+  userData?: Record<string, any>
+): string {
+  if (typeof window === 'undefined') return '';
+  const eventId = generateEventId(`custom_${eventName.toLowerCase().replace(/\s+/g, '_')}`);
+
+  // Meta Pixel (trackCustom)
+  if (window.fbq) {
+    window.fbq('trackCustom', eventName, parameters, { eventID: eventId });
+  }
+
+  // GTM
+  window.dataLayer?.push({
+    event: 'custom_meta_event',
+    meta_event_name: eventName,
+    event_id: eventId,
+    ...parameters,
+  });
+
+  // Server CAPI Backup
+  sendServerEvent(eventName, eventId, parameters, userData);
+
+  return eventId;
+}
+
+/**
+ * 12. Track "Mantra Paid Webinar" Custom Event
+ */
+export function trackClientMantraPaidWebinar(
+  details: Record<string, any> = {},
+  userData?: Record<string, any>
+): string {
+  return trackClientCustomEvent(
+    'Mantra Paid Webinar',
+    {
+      content_name: details.topic || 'Mantra Paid Webinar',
+      content_category: 'Webinar',
+      value: details.value || 499,
+      currency: details.currency || 'BDT',
+      ...details,
+    },
+    userData
+  );
 }

@@ -493,11 +493,15 @@ export async function dispatchAllServerMarketingEvents(
   settings: any,
   payload: MarketingEventPayload
 ) {
+  const resolvedMetaPixelId = process.env.META_PIXEL_ID?.trim() || settings.metaPixelId;
+  const resolvedMetaCapiToken = process.env.META_ACCESS_TOKEN?.trim() || settings.metaCapiToken;
+  const resolvedMetaTestCode = process.env.META_TEST_EVENT_CODE?.trim() || settings.metaTestEventCode;
+
   const metaPromise = sendMetaCapiEvent(
-    settings.metaPixelId,
-    settings.metaCapiToken,
+    resolvedMetaPixelId,
+    resolvedMetaCapiToken,
     payload,
-    settings.metaTestEventCode
+    resolvedMetaTestCode
   );
 
   const tikTokPromise = sendTikTokEventsApi(
