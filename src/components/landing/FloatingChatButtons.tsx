@@ -2,16 +2,24 @@ import React from 'react';
 import { MessageCircle, Phone } from 'lucide-react';
 import { trackClientOutboundClick } from '../../lib/marketing/tracking-client';
 
-export const FloatingChatButtons: React.FC = () => {
-  const whatsappNumber = '8801700000000';
-  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent('আসসালামু আলাইকুম, আমি প্রোডাক্ট সম্পর্কে জানতে চাই।')}`;
+interface FloatingChatButtonsProps {
+  phone?: string;
+}
+
+export const FloatingChatButtons: React.FC<FloatingChatButtonsProps> = ({ phone }) => {
+  const rawNumber = phone || '01344509990';
+  const cleanDigits = rawNumber.replace(/[^0-9]/g, '');
+  const internationalNumber = cleanDigits.startsWith('88')
+    ? cleanDigits
+    : `88${cleanDigits.startsWith('0') ? cleanDigits : '0' + cleanDigits}`;
+  const whatsappUrl = `https://wa.me/${internationalNumber}?text=${encodeURIComponent('আসসালামু আলাইকুম, আমি প্রোডাক্ট সম্পর্কে জানতে চাই।')}`;
 
   const handleWhatsAppClick = () => {
     trackClientOutboundClick('WhatsApp', whatsappUrl);
   };
 
   const handleCallClick = () => {
-    trackClientOutboundClick('PhoneCall', `tel:${whatsappNumber}`);
+    trackClientOutboundClick('PhoneCall', `tel:${rawNumber}`);
   };
 
   return (
@@ -32,7 +40,7 @@ export const FloatingChatButtons: React.FC = () => {
 
       {/* Phone Call Button */}
       <a
-        href={`tel:${whatsappNumber}`}
+        href={`tel:${rawNumber}`}
         onClick={handleCallClick}
         className="w-12 h-12 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-110 group relative cursor-pointer"
       >

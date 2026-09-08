@@ -2,13 +2,19 @@ import React from 'react';
 import { Phone, MessageCircle } from 'lucide-react';
 import { trackClientInternalClick } from '../../lib/marketing/tracking-client';
 
-export const HelplineSection: React.FC = () => {
-  const phoneNumber = '01785204690';
-  const whatsappUrl = `https://wa.me/88${phoneNumber}?text=${encodeURIComponent('আসসালামু আলাইকুম, আমি Ling Long 60 Pcs অর্ডার করতে চাই।')}`;
+interface HelplineSectionProps {
+  phone?: string;
+}
+
+export const HelplineSection: React.FC<HelplineSectionProps> = ({ phone }) => {
+  const phoneNumber = phone || '01344509990';
+  const cleanPhone = phoneNumber.replace(/[^0-9]/g, '');
+  const internationalPhone = cleanPhone.startsWith('88') ? cleanPhone : `88${cleanPhone.startsWith('0') ? cleanPhone : '0' + cleanPhone}`;
+  const whatsappUrl = `https://wa.me/${internationalPhone}?text=${encodeURIComponent('আসসালামু আলাইকুম, আমি Ling Long 60 Pcs অর্ডার করতে চাই।')}`;
 
   const handleCall = () => {
     trackClientInternalClick('Helpline_Call', phoneNumber);
-    window.location.href = `tel:+88${phoneNumber}`;
+    window.location.href = `tel:${phoneNumber}`;
   };
 
   const handleWhatsApp = () => {
@@ -54,7 +60,7 @@ export const HelplineSection: React.FC = () => {
 
           {/* Prompt Banner */}
           <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-xs sm:text-sm font-bold text-emerald-900">
-            অর্ডার কনফার্ম করতে কোন সমস্যা হলে সরাসরি <a href={`tel:+88${phoneNumber}`} className="underline font-mono text-emerald-800 font-black">{phoneNumber}</a> এই নাম্বারে কল করুন।
+            অর্ডার কনফার্ম করতে কোন সমস্যা হলে সরাসরি <a href={`tel:${phoneNumber}`} className="underline font-mono text-emerald-800 font-black">{phoneNumber}</a> এই নাম্বারে কল করুন।
           </div>
 
         </div>

@@ -89,7 +89,7 @@ export const INITIAL_SETTINGS: StoreSettings = {
   testCodeSetAt: new Date().toISOString(),
   telegramBotToken: '',
   telegramChatId: '',
-  helplinePhone: '01785204690',
+  helplinePhone: '01344509990',
   helplineEmail: 'support@medimartbd.shop',
   sectionOrder: ['hero', 'video', 'pricing', 'benefits', 'usage', 'education', 'whyus', 'certificate', 'reviews', 'helpline', 'checkout', 'footer'],
   sectionVisibility: {

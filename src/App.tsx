@@ -547,7 +547,7 @@ export default function App() {
         onAddReview={handleAddReview}
       />
     ),
-    helpline: <HelplineSection key="helpline" />,
+    helpline: <HelplineSection key="helpline" phone={settings.helplinePhone} />,
     faqs: <AccordionFAQs key="faqs" faqs={faqs} />,
     checkout: (
       <section id="checkout" key="checkout" className="py-14 bg-gradient-to-b from-slate-100 to-emerald-50/50 scroll-mt-6">
@@ -658,7 +658,7 @@ export default function App() {
             settings={settings}
             onScrollToCheckout={scrollToCheckout}
           />
-          <FloatingChatButtons />
+          <FloatingChatButtons phone={settings.helplinePhone} />
         </main>
       )}
 
