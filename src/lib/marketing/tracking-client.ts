@@ -7,7 +7,6 @@
 
 import { StoreSettings, ProductData, OrderData } from '../../types';
 import { getOrCreateDeviceId } from '../device-fingerprint';
-import { generateMetaEventId, isPurchaseFired, markPurchaseFired } from '../meta';
 
 declare global {
   interface Window {
@@ -278,10 +277,9 @@ async function sendServerEvent(eventName: string, eventId: string, customData: a
 
 /**
  * Generate a unique, deterministic Event ID for Pixel + CAPI deduplication
- * Prefers crypto.randomUUID() via generateMetaEventId
  */
 export function generateEventId(prefix: string): string {
-  return generateMetaEventId(prefix);
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 }
 
 /**
@@ -557,31 +555,32 @@ export function trackClientViewContent(product: ProductData) {
 }
 
 /**
- * 2b. Track AddToCart Event (Browser Pixel + Server CAPI with exact same event_id)
+ * 2.1 Track AddToCart Event (Package selection, Quantity change)
  */
 export function trackClientAddToCart(
-  product: ProductData,
+  productTitle: string,
+  value: number,
   quantity = 1,
-  details: Record<string, any> = {},
-  userData?: { phone?: string; name?: string; district?: string; email?: string }
+  packageName?: string,
+  details?: any
 ) {
-  if (typeof window === 'undefined' || !product) return '';
+  if (typeof window === 'undefined') return;
   const eventId = generateEventId('add_to_cart');
-  const unitPrice = product.offerPrice || product.regularPrice;
-  const totalPrice = unitPrice * quantity;
+  const storedUser = getStoredUserData();
 
-  // 1. Meta Pixel
+  // 1. Meta Pixel (fbq) with eventID for server CAPI deduplication
   if (window.fbq) {
     window.fbq(
       'track',
       'AddToCart',
       {
-        content_name: product.title,
+        content_name: productTitle,
         content_type: 'product',
         content_ids: ['COD-PROD-01'],
-        value: totalPrice,
+        value,
         currency: 'BDT',
         num_items: quantity,
+        package_name: packageName || `${quantity} Pcs Package`,
         ...details,
       },
       { eventID: eventId }
@@ -593,10 +592,10 @@ export function trackClientAddToCart(
     window.ttq.track(
       'AddToCart',
       {
-        content_name: product.title,
+        content_name: productTitle,
         content_type: 'product',
         content_id: 'COD-PROD-01',
-        value: totalPrice,
+        value,
         currency: 'BDT',
         quantity,
       },
@@ -608,8 +607,8 @@ export function trackClientAddToCart(
   if (window.gtag) {
     window.gtag('event', 'add_to_cart', {
       currency: 'BDT',
-      value: totalPrice,
-      items: [{ item_id: 'COD-PROD-01', item_name: product.title, price: unitPrice, quantity }],
+      value,
+      items: [{ item_id: 'COD-PROD-01', item_name: productTitle, price: value, quantity }],
     });
   }
 
@@ -618,29 +617,28 @@ export function trackClientAddToCart(
     event: 'add_to_cart',
     ecommerce: {
       currency: 'BDT',
-      value: totalPrice,
-      items: [{ item_id: 'COD-PROD-01', item_name: product.title, price: unitPrice, quantity }],
+      value,
+      items: [{ item_id: 'COD-PROD-01', item_name: productTitle, price: value, quantity }],
     },
     event_id: eventId,
   });
 
-  // 5. Server CAPI Backup with exact same eventId
+  // 5. Server CAPI Backup
   sendServerEvent(
     'AddToCart',
     eventId,
     {
-      value: totalPrice,
+      value,
       currency: 'BDT',
-      content_name: product.title,
+      content_name: productTitle,
       content_type: 'product',
       content_ids: ['COD-PROD-01'],
       num_items: quantity,
+      package_name: packageName || `${quantity} Pcs Package`,
       ...details,
     },
-    userData
+    storedUser
   );
-
-  return eventId;
 }
 
 /**
@@ -1109,16 +1107,6 @@ export function trackClientPurchase(
   googleAdsConversionId?: string
 ) {
   if (typeof window === 'undefined') return;
-  if (!order || !order.id) return;
-
-  // Prevent duplicate Purchase firing if user refreshes the success page
-  if (isPurchaseFired(order.id)) {
-    if (typeof console !== 'undefined') {
-      console.log(`[Meta Tracking] Purchase event for order ${order.id} already fired. Duplicate prevented.`);
-    }
-    return;
-  }
-  markPurchaseFired(order.id);
 
   const eventId = order.eventId || `purchase_${order.id}`;
 
@@ -1199,55 +1187,4 @@ export function trackClientPurchase(
       ],
     },
   });
-}
-
-/**
- * 11. Track Custom Event with Browser + Server Deduplication
- * (Browser trackCustom + Server CAPI with exact same eventName & eventId)
- */
-export function trackClientCustomEvent(
-  eventName: string,
-  parameters: Record<string, any> = {},
-  userData?: Record<string, any>
-): string {
-  if (typeof window === 'undefined') return '';
-  const eventId = generateEventId(`custom_${eventName.toLowerCase().replace(/\s+/g, '_')}`);
-
-  // Meta Pixel (trackCustom)
-  if (window.fbq) {
-    window.fbq('trackCustom', eventName, parameters, { eventID: eventId });
-  }
-
-  // GTM
-  window.dataLayer?.push({
-    event: 'custom_meta_event',
-    meta_event_name: eventName,
-    event_id: eventId,
-    ...parameters,
-  });
-
-  // Server CAPI Backup
-  sendServerEvent(eventName, eventId, parameters, userData);
-
-  return eventId;
-}
-
-/**
- * 12. Track "Mantra Paid Webinar" Custom Event
- */
-export function trackClientMantraPaidWebinar(
-  details: Record<string, any> = {},
-  userData?: Record<string, any>
-): string {
-  return trackClientCustomEvent(
-    'Mantra Paid Webinar',
-    {
-      content_name: details.topic || 'Mantra Paid Webinar',
-      content_category: 'Webinar',
-      value: details.value || 499,
-      currency: details.currency || 'BDT',
-      ...details,
-    },
-    userData
-  );
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Crown, Check, Truck, ShieldCheck, Zap } from 'lucide-react';
 import { ProductData } from '../../types';
-import { trackClientInternalClick } from '../../lib/marketing/tracking-client';
+import { trackClientInternalClick, trackClientAddToCart } from '../../lib/marketing/tracking-client';
 
 interface PriceSectionProps {
   product: ProductData;
@@ -13,6 +13,12 @@ export const PriceSection: React.FC<PriceSectionProps> = ({
   onScrollToCheckout,
 }) => {
   const handleOrderClick = () => {
+    trackClientAddToCart(
+      product.title,
+      product.offerPrice || product.regularPrice,
+      1,
+      'Ling Long 60 Capsules Best Value'
+    );
     trackClientInternalClick('Price_Section_Order', 'Ling Long Package Card');
     onScrollToCheckout();
   };

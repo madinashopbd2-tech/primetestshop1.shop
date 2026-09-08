@@ -29,6 +29,7 @@ import { capiLogsMemory, CapiLogEntry } from '../../lib/marketing/meta-capi';
 import {
   trackClientWatchVideo,
   trackClientPageView,
+  trackClientAddToCart,
   trackClientInitiateCheckout,
   trackClientPageScroll,
   trackClientTimeOnPage,
@@ -170,8 +171,10 @@ export const MarketingPixelView: React.FC<MarketingPixelViewProps> = ({
           instructions: [],
         };
         trackClientViewContent(dummyProd);
+      } else if (eventName === 'AddToCart') {
+        trackClientAddToCart('Ling Long 60 Capsules', 1299, 1, 'Best Value 60 Capsules Pack');
       } else if (eventName === 'InitiateCheckout') {
-        trackClientInitiateCheckout('ProFlex Smart Orthopedic', 1450);
+        trackClientInitiateCheckout('Ling Long 60 Capsules', 1299);
       } else if (eventName === 'WatchVideo') {
         trackClientWatchVideo('Product Demo Video - ProFlex Orthopedic', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
       } else if (eventName === 'PageScroll') {
@@ -219,6 +222,7 @@ export const MarketingPixelView: React.FC<MarketingPixelViewProps> = ({
     const eventList = [
       'PageView',
       'ViewContent',
+      'AddToCart',
       'WatchVideo',
       'PageScroll',
       'ScrollDepth',
@@ -788,14 +792,15 @@ export const MarketingPixelView: React.FC<MarketingPixelViewProps> = ({
               {[
                 { name: 'PageView', label: '1. PageView', color: 'bg-slate-800 hover:bg-slate-700 text-slate-200' },
                 { name: 'ViewContent', label: '2. View content', color: 'bg-slate-800 hover:bg-slate-700 text-slate-200' },
-                { name: 'WatchVideo', label: '3. WatchVideo', color: 'bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300' },
-                { name: 'PageScroll', label: '4. PageScroll', color: 'bg-slate-800 hover:bg-slate-700 text-slate-200' },
-                { name: 'ScrollDepth', label: '5. ScrollDepth', color: 'bg-slate-800 hover:bg-slate-700 text-slate-200' },
-                { name: 'TimeOnPage', label: '6. TimeOnPage', color: 'bg-slate-800 hover:bg-slate-700 text-slate-200' },
-                { name: 'InternalClick', label: '7. InternalClick', color: 'bg-slate-800 hover:bg-slate-700 text-slate-200' },
-                { name: 'OutboundClick', label: '8. OutboundClick', color: 'bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/30 text-emerald-300' },
-                { name: 'InitiateCheckout', label: '9. Initiate checkout', color: 'bg-amber-950/80 hover:bg-amber-900 border border-amber-500/30 text-amber-300' },
-                { name: 'Purchase', label: '10. Purchase', color: 'bg-rose-950/80 hover:bg-rose-900 border border-rose-500/30 text-rose-300' },
+                { name: 'AddToCart', label: '3. AddToCart', color: 'bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/30 text-emerald-300' },
+                { name: 'InitiateCheckout', label: '4. Initiate checkout', color: 'bg-amber-950/80 hover:bg-amber-900 border border-amber-500/30 text-amber-300' },
+                { name: 'Purchase', label: '5. Purchase', color: 'bg-rose-950/80 hover:bg-rose-900 border border-rose-500/30 text-rose-300' },
+                { name: 'WatchVideo', label: '6. WatchVideo', color: 'bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300' },
+                { name: 'ScrollDepth', label: '7. ScrollDepth', color: 'bg-slate-800 hover:bg-slate-700 text-slate-200' },
+                { name: 'PageScroll', label: '8. PageScroll', color: 'bg-slate-800 hover:bg-slate-700 text-slate-200' },
+                { name: 'TimeOnPage', label: '9. TimeOnPage', color: 'bg-slate-800 hover:bg-slate-700 text-slate-200' },
+                { name: 'InternalClick', label: '10. InternalClick', color: 'bg-slate-800 hover:bg-slate-700 text-slate-200' },
+                { name: 'OutboundClick', label: '11. OutboundClick', color: 'bg-teal-950/80 hover:bg-teal-900 border border-teal-500/30 text-teal-300' },
               ].map((item) => (
                 <button
                   key={item.name}

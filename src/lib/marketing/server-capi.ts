@@ -26,6 +26,7 @@ export interface MarketingEventPayload {
   eventName: 
     | 'Purchase' 
     | 'CompletePayment' 
+    | 'AddToCart'
     | 'InitiateCheckout' 
     | 'ViewContent' 
     | 'PageView'
@@ -293,6 +294,7 @@ export async function sendTikTokEventsApi(
 
   // Map Meta event names to TikTok Event names
   let ttEventName = 'CompletePayment';
+  if (eventName === 'AddToCart') ttEventName = 'AddToCart';
   if (eventName === 'InitiateCheckout') ttEventName = 'InitiateCheckout';
   if (eventName === 'ViewContent') ttEventName = 'ViewContent';
   if (eventName === 'PageView') ttEventName = 'PageView';
@@ -405,6 +407,7 @@ export async function sendGa4MeasurementApi(
   const { eventName, eventId, userData, customData } = payload;
 
   let gaEventName = 'purchase';
+  if (eventName === 'AddToCart') gaEventName = 'add_to_cart';
   if (eventName === 'InitiateCheckout') gaEventName = 'begin_checkout';
   if (eventName === 'ViewContent') gaEventName = 'view_item';
 
@@ -493,15 +496,11 @@ export async function dispatchAllServerMarketingEvents(
   settings: any,
   payload: MarketingEventPayload
 ) {
-  const resolvedMetaPixelId = process.env.META_PIXEL_ID?.trim() || settings.metaPixelId;
-  const resolvedMetaCapiToken = process.env.META_ACCESS_TOKEN?.trim() || settings.metaCapiToken;
-  const resolvedMetaTestCode = process.env.META_TEST_EVENT_CODE?.trim() || settings.metaTestEventCode;
-
   const metaPromise = sendMetaCapiEvent(
-    resolvedMetaPixelId,
-    resolvedMetaCapiToken,
+    settings.metaPixelId,
+    settings.metaCapiToken,
     payload,
-    resolvedMetaTestCode
+    settings.metaTestEventCode
   );
 
   const tikTokPromise = sendTikTokEventsApi(

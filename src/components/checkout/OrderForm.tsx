@@ -11,11 +11,17 @@ import {
   AlertCircle, 
   Clock, 
   Lock,
-  MessageSquare
+  MessageSquare,
+  Package
 } from 'lucide-react';
 import { BANGLADESH_DISTRICTS } from '../../data/bangladesh-locations';
 import { ProductData, StoreSettings, OrderData } from '../../types';
-import { trackClientInitiateCheckout, trackClientInternalClick, trackClientAddToCart, getMarketingClickContext } from '../../lib/marketing/tracking-client';
+import { 
+  trackClientInitiateCheckout, 
+  trackClientAddToCart,
+  trackClientInternalClick, 
+  getMarketingClickContext 
+} from '../../lib/marketing/tracking-client';
 import { getOrCreateDeviceId } from '../../lib/device-fingerprint';
 
 interface OrderFormProps {
@@ -43,6 +49,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   // UI / Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [hasInitiatedCheckout, setHasInitiatedCheckout] = useState(false);
   
   // OTP Modal state for High Risk Smart OTP verification
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -250,89 +257,51 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Package & Quantity Selector with AddToCart Meta Event */}
-          <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2 flex items-center justify-between">
+          {/* Package / Quantity Selector */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <ShoppingBag className="w-3.5 h-3.5 text-emerald-600" />
-                প্যাকেজ নির্বাচন করুন
+                <Package className="w-3.5 h-3.5 text-emerald-600" />
+                প্যাকেজ নির্বাচন করুন <span className="text-rose-500">*</span>
               </span>
-              <span className="text-[11px] text-emerald-700 font-normal">
-                ১ টির বেশি অর্ডারে বিশেষ ডিসকাউন্ট
+              <span className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                অফার মূল্য কার্যকর
               </span>
             </label>
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               {[
-                { qty: 1, label: '১ পিস', tag: 'নরমাল' },
-                { qty: 2, label: '২ পিস', tag: 'জনপ্রিয়' },
-                { qty: 3, label: '৩ পিস', tag: 'বেস্ট ডিল' },
+                { qty: 1, title: '১ টি ফাইল (৬০ ক্যাপসুল)', subtitle: '১ মাসের ট্রায়াল ডোজ', badge: '' },
+                { qty: 2, title: '২ টি ফাইল (১২০ ক্যাপসুল)', subtitle: '২ মাসের পূর্ণ কোর্স', badge: 'জনপ্রিয়' },
+                { qty: 3, title: '৩ টি ফাইল (১৮০ ক্যাপসুল)', subtitle: '৩ মাসের ফুল কম্বো', badge: 'সর্বোচ্চ সেভিং' },
               ].map((pkg) => {
                 const isSelected = quantity === pkg.qty;
+                const pkgTotal = unitPrice * pkg.qty;
                 return (
                   <button
                     key={pkg.qty}
                     type="button"
                     onClick={() => {
                       setQuantity(pkg.qty);
-                      trackClientAddToCart(product, pkg.qty, {
-                        package_label: pkg.label,
-                        trigger: 'PackageSelect',
-                      });
-                      trackClientInternalClick('Package_Select', `${pkg.qty}_pcs`);
+                      trackClientAddToCart(product.title, pkgTotal, pkg.qty, pkg.title);
+                      trackClientInternalClick('SelectPackage', pkg.title);
                     }}
-                    className={`relative py-3 px-2 rounded-xl text-center border-2 transition-all cursor-pointer ${
+                    className={`relative p-3 rounded-xl border text-left transition-all cursor-pointer ${
                       isSelected
-                        ? 'border-emerald-600 bg-white shadow-sm ring-1 ring-emerald-600/20'
-                        : 'border-slate-200 bg-white/70 hover:border-emerald-300'
+                        ? 'border-emerald-600 bg-emerald-50/80 ring-2 ring-emerald-500/30 shadow-xs'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
                     }`}
                   >
-                    <span className="block text-sm font-extrabold text-slate-800">
-                      {pkg.label}
-                    </span>
-                    <span className="text-[10px] text-slate-500 block">
-                      ৳{(product.offerPrice || product.regularPrice) * pkg.qty}
-                    </span>
-                    <span
-                      className={`inline-block mt-1 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${
-                        isSelected
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-slate-100 text-slate-600'
-                      }`}
-                    >
-                      {pkg.tag}
-                    </span>
+                    {pkg.badge && (
+                      <span className="absolute -top-2 right-2 text-[10px] font-black bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full shadow-xs">
+                        {pkg.badge}
+                      </span>
+                    )}
+                    <div className="text-xs font-bold text-slate-900">{pkg.title}</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">{pkg.subtitle}</div>
+                    <div className="text-sm font-black text-emerald-800 mt-1.5">৳{pkgTotal}</div>
                   </button>
                 );
               })}
-            </div>
-            
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-emerald-100/70 text-xs">
-              <span className="text-slate-600 font-medium">কাস্টম পরিমাণ:</span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const newQty = Math.max(1, quantity - 1);
-                    setQuantity(newQty);
-                    trackClientAddToCart(product, newQty, { trigger: 'QuantityMinus' });
-                  }}
-                  className="w-7 h-7 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 font-bold flex items-center justify-center text-slate-700"
-                >
-                  -
-                </button>
-                <span className="w-8 text-center font-bold text-slate-900 text-sm">{quantity}</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const newQty = quantity + 1;
-                    setQuantity(newQty);
-                    trackClientAddToCart(product, newQty, { trigger: 'QuantityPlus' });
-                  }}
-                  className="w-7 h-7 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 font-bold flex items-center justify-center text-slate-700"
-                >
-                  +
-                </button>
-              </div>
             </div>
           </div>
 
@@ -356,7 +325,19 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   );
                   trackClientInternalClick('Input_CustomerName', 'Focus');
                 }}
-                onChange={(e) => setCustomerName(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setCustomerName(val);
+                  if (!hasInitiatedCheckout && val.trim().length >= 1) {
+                    setHasInitiatedCheckout(true);
+                    trackClientInitiateCheckout(
+                      product.title,
+                      grandTotal,
+                      { trigger: 'NameTypingStart' },
+                      { name: val.trim(), phone: phone.trim() }
+                    );
+                  }
+                }}
                 placeholder="যেমন: মোঃ সাকিব হাসান"
                 className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-slate-900 text-sm"
               />
@@ -391,7 +372,19 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                     );
                   }
                 }}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setPhone(val);
+                  if (!hasInitiatedCheckout && val.trim().length >= 1) {
+                    setHasInitiatedCheckout(true);
+                    trackClientInitiateCheckout(
+                      product.title,
+                      grandTotal,
+                      { trigger: 'PhoneTypingStart' },
+                      { name: customerName.trim(), phone: val.trim() }
+                    );
+                  }
+                }}
                 placeholder="যেমন: 01712345678"
                 className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-slate-900 text-sm font-medium"
               />
