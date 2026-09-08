@@ -16,7 +16,7 @@ export const INITIAL_PRODUCT: ProductData = {
     'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1577401239170-897942555fb3?auto=format&fit=crop&w=800&q=80',
   ],
-  videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+  videoUrl: 'https://youtu.be/kBZD3rWQ6LY?si=4xDyWNbmn91nmFFI',
   embedDirectVideo: true,
   features: [
     {

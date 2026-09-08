@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ProductData } from '../../types';
 import { trackClientInternalClick } from '../../lib/marketing/tracking-client';
+import { parseVideoUrl } from '../../utils/video-embed';
+import { ExternalLink } from 'lucide-react';
 
 interface VideoSectionProps {
   product: ProductData;
@@ -11,6 +13,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
   product,
   onScrollToCheckout,
 }) => {
+  const videoInfo = parseVideoUrl(product.videoUrl);
   // 24-hour countdown state
   const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number }>({
     hours: 12,
@@ -73,14 +76,24 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
 
         {/* Video / Showcase Container */}
         <div className="relative mx-auto rounded-3xl overflow-hidden shadow-2xl shadow-slate-950/20 border-4 border-emerald-100 bg-slate-950 aspect-video max-w-3xl flex items-center justify-center">
-          {product.videoUrl && product.videoUrl.includes('youtube') ? (
-            <iframe
-              className="w-full h-full border-0"
-              src={product.videoUrl}
-              title="Ling Long Capsules Product Video"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
+          {videoInfo.embedUrl ? (
+            videoInfo.isDirectVideo ? (
+              <video
+                src={videoInfo.embedUrl}
+                controls
+                className="w-full h-full object-contain"
+                poster={product.images?.[0]}
+              />
+            ) : (
+              <iframe
+                className="w-full h-full border-0"
+                src={videoInfo.embedUrl}
+                title="Product Video"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            )
           ) : (
             <div className="relative w-full h-full flex flex-col items-center justify-center p-6 text-white bg-gradient-to-br from-emerald-950 via-slate-900 to-emerald-900">
               <img
@@ -97,6 +110,21 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
             </div>
           )}
         </div>
+
+        {/* Optional Direct Video Link */}
+        {videoInfo.rawUrl && (
+          <div className="flex justify-center -mt-4">
+            <a
+              href={videoInfo.rawUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-700 bg-slate-100 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 px-3.5 py-1.5 rounded-full transition-all"
+            >
+              <span>ভিডিও আলাদা ট্যাবে প্লে করুন</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
+        )}
 
         {/* Order Button */}
         <div>

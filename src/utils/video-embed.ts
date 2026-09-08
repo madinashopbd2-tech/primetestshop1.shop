@@ -103,8 +103,9 @@ export function parseVideoUrl(url?: string): VideoEmbedResult {
     return {
       type: 'youtube',
       isDirectVideo: false,
-      embedUrl: `https://www.youtube.com/embed/${videoId}?rel=0&autoplay=1&mute=1&controls=1&enablejsapi=1`,
-      rawUrl: trimmed,
+      // youtube-nocookie.com avoids Error 153 cookie and cross-origin blocking
+      embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&controls=1&playsinline=1`,
+      rawUrl: trimmed.startsWith('http') ? trimmed : `https://www.youtube.com/watch?v=${videoId}`,
       platformName: 'YouTube',
     };
   }
